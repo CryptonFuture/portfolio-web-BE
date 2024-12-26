@@ -1,4 +1,5 @@
 const app = require('./app')
+require('./connection/connection')
 
 const {config} = require('dotenv')
 
