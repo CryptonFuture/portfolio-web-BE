@@ -1,14 +1,19 @@
 const mongoose = require('mongoose')
 
 const userSchema = new mongoose.Schema({
-    username: {
+    firstname: {
+        type: String,
+        required: true
+    },
+
+    lastname: {
         type: String,
         required: true
     },
 
     email: {
         type: String,
-        required: true
+        required: true,
     },
 
     password: {
@@ -28,12 +33,10 @@ const userSchema = new mongoose.Schema({
 
     phone: {
         type: String,
-        required: true
     },
 
     address: {
         type: String,
-        required: true
     },
 
     token: {
@@ -54,6 +57,19 @@ const userSchema = new mongoose.Schema({
     is_admin: {
         type: Boolean,
         default: 0
+    },
+
+    is_deleted: {
+        type: Boolean,
+        default: 0
+    },
+    created_by: {
+        type: String,
+        default: null
+    },
+    updated_by: {
+        type: String,
+        default: null
     }
 }, {
     timestamps: true
