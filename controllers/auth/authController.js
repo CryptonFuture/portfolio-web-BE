@@ -2,6 +2,7 @@ const User = require('../../models/userSchema')
 const bcrypt = require('bcryptjs')
 const { generateAccessToken } = require('../../utils/utils')
 const { isValidEmail } = require('../../utils/utils')
+const validator = require('validator')
 
 const register = async (req, res) => {
     try {
@@ -11,6 +12,13 @@ const register = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 error: 'please fill out all fields'
+            })
+        }
+
+        if (!validator.isEmail(email)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid email'
             })
         }
 
@@ -25,6 +33,13 @@ const register = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 error: "password does'nt match",
+            })
+        }
+
+        if (password.length < 10 || confirmPass.length < 10) {
+            return res.status(400).json({
+                success: false,
+                error: "Password must be at least 10 characters long",
             })
         }
 
@@ -70,7 +85,7 @@ const login = async (req, res) => {
         if (!userData) {
             return res.status(400).json({
                 success: false,
-                message: "Email & Password is incorrect!",
+                error: "Email & Password is incorrect!",
             })
         }
 
@@ -79,7 +94,7 @@ const login = async (req, res) => {
         if (!isPasswordMatch) {
             return res.status(400).json({
                 success: false,
-                message: "Email & Password is incorrect!",
+                error: "Email & Password is incorrect!",
             })
         }
 
@@ -113,7 +128,7 @@ const login = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            msg: "login successfully",
+            message: "login successfully",
             data: userData,
             accessToken: accessToken,
         });
