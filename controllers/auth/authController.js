@@ -110,71 +110,36 @@ const login = async (req, res) => {
             });
         }
 
-        if (!['admin', 'user', 'superAdmin'].includes(userData.role)) {
+        if (!['admin', 'user', 'superAdmin', 'subAdmin'].includes(userData.role)) {
             return res.status(403).json({
                 success: false,
                 error: "Unauthorized access: invalid role.",
             });
         }
 
+
+        if (userData.role === 'user' && !userData.is_sub_admin) {
+            return res.status(403).json({
+                success: false,
+                error: "Unauthorized access: user does not have subAdmin privileges.",
+            });
+        }
         
-        if (userData.role === 'admin' && !userData.is_super_admin) {
+        if (userData.role === 'admin' && !userData.is_sub_admin) {
             return res.status(403).json({
                 success: false,
-                error: "Unauthorized access: admin does not have superAdmin privileges.",
-            });
-        } else {
-            const users = await User.findByIdAndUpdate(
-                { _id: userData._id },
-                { token: accessToken },
-                { new: true }
-            )
-
-            let message = "Login successfully";
-            if (userData.role === "user") {
-                message = "Admin login successfully";
-            }
-
-
-            await users.save()
-
-             res.status(200).json({
-                success: true,
-                message: message,
-                role: userData.role,
-                data: userData,
-                accessToken: accessToken,
+                error: "Unauthorized access: admin does not have subAdmin privileges.",
             });
         }
 
-        if (userData.role === 'superAdmin') {
-            const users = await User.findByIdAndUpdate(
-                { _id: userData._id },
-                { token: accessToken },
-                { new: true }
-            )
-
-            let message = "Login successfully";
-            if (userData.role === "superAdmin") {
-                message = "SuperAdmin login successfully";
-            }
-            await users.save()
-
-            return res.status(200).json({
-                success: true,
-                message: message,
-                role: userData.role,
-                data: userData,
-                accessToken: accessToken,
-            });
-        }
-
-        if (userData.role === 'user' && !userData.is_admin) {
+        if (userData.role === 'superAdmin' && !userData.is_sub_admin) {
             return res.status(403).json({
                 success: false,
-                error: "Unauthorized access: user does not have admin privileges.",
+                error: "Unauthorized access: superAdmin does not have subAdmin privileges.",
             });
-        } else {
+        }
+       
+        if (userData.role === 'user' || userData.role === 'admin' || userData.role === 'superAdmin') {
             const users = await User.findByIdAndUpdate(
                 { _id: userData._id },
                 { token: accessToken },
@@ -184,21 +149,25 @@ const login = async (req, res) => {
             let message = "Login successfully";
             if (userData.role === "user") {
                 message = "User login successfully";
+            } else if (userData.role === "admin") {
+                message = "Admin login successfully";
+            } else if (userData.role === "superAdmin") {
+                message = "superAdmin login successfully";
             }
 
 
             await users.save()
 
-            return res.status(200).json({
+            res.status(200).json({
                 success: true,
                 message: message,
                 role: userData.role,
                 data: userData,
                 accessToken: accessToken,
             });
-        }
+        } 
+            
         
-
     } catch (error) {
         console.log(error);
 
