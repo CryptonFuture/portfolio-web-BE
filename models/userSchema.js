@@ -27,8 +27,10 @@ const userSchema = new mongoose.Schema({
     },
 
     role: {
-        type: Number,
-        default: 0
+        type: String,
+        required: true,
+        enum: ['admin', 'user', 'superAdmin', 'subAdmin'],
+        default: null
     },
 
     phone: {
@@ -55,6 +57,16 @@ const userSchema = new mongoose.Schema({
     },
 
     is_admin: {
+        type: Boolean,
+        default: 0
+    },
+
+    is_super_admin: {
+        type: Boolean,
+        default: 0
+    },
+
+    is_sub_admin: {
         type: Boolean,
         default: 0
     },
