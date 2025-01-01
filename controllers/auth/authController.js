@@ -6,9 +6,9 @@ const validator = require('validator')
 
 const register = async (req, res) => {
     try {
-        const { firstname, lastname, email, password, confirmPass, phone, address } = req.body
+        const { firstname, lastname, email, password, confirmPass, phone, address, role } = req.body
 
-        if (!firstname || !lastname || !email || !password || !confirmPass) {
+        if (!firstname || !lastname || !email || !password || !confirmPass || !role) {
             return res.status(400).json({
                 success: false,
                 error: 'please fill out all fields'
@@ -50,6 +50,7 @@ const register = async (req, res) => {
             firstname,
             lastname,
             email,
+            role,
             password: hashPassword,
             confirmPass: hashConfirmPassword,
             phone: phone ? phone : null,
@@ -102,8 +103,6 @@ const login = async (req, res) => {
 
         const user = await User.findOne({ active: userData.active })
 
-        const isAdmin = await User.findOne({ is_admin: userData.is_admin })
-
         if (!user.active) {
             return res.status(400).send({
                 success: false,
@@ -111,27 +110,68 @@ const login = async (req, res) => {
             });
         }
 
-        if (!isAdmin.is_admin) {
-            return res.status(400).send({
+        if (!['admin', 'user', 'superAdmin'].includes(userData.role)) {
+            return res.status(403).json({
                 success: false,
-                error: "user is not admin",
+                error: "Unauthorized access: invalid role.",
             });
         }
 
-        const users = await User.findByIdAndUpdate(
-            { _id: userData._id },
-            { token: accessToken },
-            { new: true }
-        )
+        if (userData.role === 'admin' || userData.role === 'superAdmin') {
+            const users = await User.findByIdAndUpdate(
+                { _id: userData._id },
+                { token: accessToken },
+                { new: true }
+            )
 
-        await users.save()
+            let message = "Login successfully";
+            if (userData.role === "superAdmin") {
+                message = "SuperAdmin login successfully";
+            } else if (userData.role === 'admin') {
+                message = "Admin login successfully";
+            }
 
-        return res.status(200).json({
-            success: true,
-            message: "login successfully",
-            data: userData,
-            accessToken: accessToken,
-        });
+
+            await users.save()
+
+            return res.status(200).json({
+                success: true,
+                message: message,
+                role: userData.role,
+                data: userData,
+                accessToken: accessToken,
+            });
+        }
+  
+        if (userData.role === 'user' && !userData.is_admin) {
+            return res.status(403).json({
+                success: false,
+                error: "Unauthorized access: user does not have admin privileges.",
+            }); 
+        } else {
+            const users = await User.findByIdAndUpdate(
+                { _id: userData._id },
+                { token: accessToken },
+                { new: true }
+            )
+
+            let message = "Login successfully";
+            if (userData.role === "user") {
+                message = "User login successfully";
+            } 
+
+
+            await users.save()
+
+            return res.status(200).json({
+                success: true,
+                message: message,
+                role: userData.role,
+                data: userData,
+                accessToken: accessToken,
+            });
+        }
+
     } catch (error) {
         console.log(error);
 
