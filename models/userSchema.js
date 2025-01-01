@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema({
     role: {
         type: String,
         required: true,
-        enum: ['admin', 'user', 'superAdmin'],
+        enum: ['admin', 'user', 'superAdmin', 'subAdmin'],
         default: null
     },
 
@@ -57,6 +57,16 @@ const userSchema = new mongoose.Schema({
     },
 
     is_admin: {
+        type: Boolean,
+        default: 0
+    },
+
+    is_super_admin: {
+        type: Boolean,
+        default: 0
+    },
+
+    is_sub_admin: {
         type: Boolean,
         default: 0
     },
