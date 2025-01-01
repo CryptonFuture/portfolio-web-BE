@@ -6,9 +6,9 @@ const validator = require('validator')
 
 const register = async (req, res) => {
     try {
-        const { firstname, lastname, email, password, confirmPass, phone, address, role } = req.body
+        const { firstname, lastname, email, password, confirmPass, phone, address } = req.body
 
-        if (!firstname || !lastname || !email || !password || !confirmPass || !role) {
+        if (!firstname || !lastname || !email || !password || !confirmPass) {
             return res.status(400).json({
                 success: false,
                 error: 'please fill out all fields'
@@ -50,7 +50,7 @@ const register = async (req, res) => {
             firstname,
             lastname,
             email,
-            role,
+            role: 'user',
             password: hashPassword,
             confirmPass: hashConfirmPassword,
             phone: phone ? phone : null,
@@ -117,7 +117,37 @@ const login = async (req, res) => {
             });
         }
 
-        if (userData.role === 'admin' || userData.role === 'superAdmin') {
+        
+        if (userData.role === 'admin' && !userData.is_super_admin) {
+            return res.status(403).json({
+                success: false,
+                error: "Unauthorized access: admin does not have superAdmin privileges.",
+            });
+        } else {
+            const users = await User.findByIdAndUpdate(
+                { _id: userData._id },
+                { token: accessToken },
+                { new: true }
+            )
+
+            let message = "Login successfully";
+            if (userData.role === "user") {
+                message = "Admin login successfully";
+            }
+
+
+            await users.save()
+
+             res.status(200).json({
+                success: true,
+                message: message,
+                role: userData.role,
+                data: userData,
+                accessToken: accessToken,
+            });
+        }
+
+        if (userData.role === 'superAdmin') {
             const users = await User.findByIdAndUpdate(
                 { _id: userData._id },
                 { token: accessToken },
@@ -127,8 +157,33 @@ const login = async (req, res) => {
             let message = "Login successfully";
             if (userData.role === "superAdmin") {
                 message = "SuperAdmin login successfully";
-            } else if (userData.role === 'admin') {
-                message = "Admin login successfully";
+            }
+            await users.save()
+
+            return res.status(200).json({
+                success: true,
+                message: message,
+                role: userData.role,
+                data: userData,
+                accessToken: accessToken,
+            });
+        }
+
+        if (userData.role === 'user' && !userData.is_admin) {
+            return res.status(403).json({
+                success: false,
+                error: "Unauthorized access: user does not have admin privileges.",
+            });
+        } else {
+            const users = await User.findByIdAndUpdate(
+                { _id: userData._id },
+                { token: accessToken },
+                { new: true }
+            )
+
+            let message = "Login successfully";
+            if (userData.role === "user") {
+                message = "User login successfully";
             }
 
 
@@ -142,35 +197,7 @@ const login = async (req, res) => {
                 accessToken: accessToken,
             });
         }
-  
-        if (userData.role === 'user' && !userData.is_admin) {
-            return res.status(403).json({
-                success: false,
-                error: "Unauthorized access: user does not have admin privileges.",
-            }); 
-        } else {
-            const users = await User.findByIdAndUpdate(
-                { _id: userData._id },
-                { token: accessToken },
-                { new: true }
-            )
-
-            let message = "Login successfully";
-            if (userData.role === "user") {
-                message = "User login successfully";
-            } 
-
-
-            await users.save()
-
-            return res.status(200).json({
-                success: true,
-                message: message,
-                role: userData.role,
-                data: userData,
-                accessToken: accessToken,
-            });
-        }
+        
 
     } catch (error) {
         console.log(error);

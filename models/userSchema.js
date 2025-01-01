@@ -61,6 +61,11 @@ const userSchema = new mongoose.Schema({
         default: 0
     },
 
+    is_super_admin: {
+        type: Boolean,
+        default: 0
+    },
+
     is_deleted: {
         type: Boolean,
         default: 0
