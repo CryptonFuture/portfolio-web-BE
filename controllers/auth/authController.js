@@ -1,4 +1,6 @@
 const User = require('../../models/userSchema')
+const UserLogs = require('../../models/userLogsSchema')
+
 const bcrypt = require('bcryptjs')
 const { generateAccessToken } = require('../../utils/utils')
 const { isValidEmail } = require('../../utils/utils')
@@ -109,6 +111,13 @@ const login = async (req, res) => {
                 error: "This account is in-active, please contact your admin",
             });
         }
+
+        const logs = new UserLogs({
+            user_id: userData._id,
+            token: accessToken,
+        });
+
+        await logs.save();
 
         if (!['admin', 'user', 'superAdmin', 'subAdmin'].includes(userData.role)) {
             return res.status(403).json({
