@@ -5,6 +5,8 @@ const bcrypt = require('bcryptjs')
 const { generateAccessToken } = require('../../utils/utils')
 const { isValidEmail } = require('../../utils/utils')
 const validator = require('validator')
+const Permission = require("../../models/permissionSchema");
+const UserPermission = require('../../models/userPermissionSchema')
 
 const register = async (req, res) => {
     try {
@@ -64,6 +66,29 @@ const register = async (req, res) => {
 
         const userData = await user.save()
 
+        const defaultPermissions = await Permission.find({
+            is_default: 1
+        })
+
+        if (defaultPermissions.length > 0) {
+            const permissionArray = []
+            defaultPermissions.forEach((permission) => {
+                permissionArray.push({
+                    permission_name: permission.permission_name,
+                    permission_value: [0, 1, 2, 3]
+                })
+            })
+
+            const userPermission = new UserPermission({
+                user_id: userData._id,
+                permissions: permissionArray
+            })
+
+            await userPermission.save()
+        }
+
+
+
         return res.status(200).json({
             success: true,
             message: "user create successfully",
@@ -103,6 +128,46 @@ const login = async (req, res) => {
 
         const accessToken = await generateAccessToken({ user: userData })
 
+        const result = await User.aggregate([
+            {
+                $match: { email: userData.email }
+            },
+
+            {
+                $lookup: {
+                    from: 'userpermissions',
+                    localField: '_id',
+                    foreignField: 'user_id',
+                    as: 'permissions'
+                }
+            },
+
+            {
+                $project: {
+                    _id: 1,
+                    name: 1,
+                    email: 1,
+                    role: 1,
+                    active: 1,
+                    permissions: {
+                        $cond: {
+                            if: { $isArray: '$permissions' },
+                            then: { $arrayElemAt: ["$permissions", 0] },
+                            else: null
+                        }
+                    }
+                }
+            },
+
+            {
+                $addFields: {
+                    permissions: {
+                        permissions: "$permissions.permissions"
+                    }
+                }
+            }
+        ])
+
         const user = await User.findOne({ active: userData.active })
 
         if (!user.active) {
@@ -133,7 +198,7 @@ const login = async (req, res) => {
                 error: "Unauthorized access: user does not have subAdmin privileges.",
             });
         }
-        
+
         if (userData.role === 'admin' && !userData.is_sub_admin) {
             return res.status(403).json({
                 success: false,
@@ -147,7 +212,7 @@ const login = async (req, res) => {
                 error: "Unauthorized access: superAdmin does not have subAdmin privileges.",
             });
         }
-       
+
         if (userData.role === 'user' || userData.role === 'admin' || userData.role === 'superAdmin') {
             const users = await User.findByIdAndUpdate(
                 { _id: userData._id },
@@ -171,12 +236,12 @@ const login = async (req, res) => {
                 success: true,
                 message: message,
                 role: userData.role,
-                data: userData,
+                data: result[0],
                 accessToken: accessToken,
             });
-        } 
-            
-        
+        }
+
+
     } catch (error) {
         console.log(error);
 
