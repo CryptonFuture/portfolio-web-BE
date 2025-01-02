@@ -54,7 +54,6 @@ const register = async (req, res) => {
             firstname,
             lastname,
             email,
-            role: 'user',
             password: hashPassword,
             confirmPass: hashConfirmPassword,
             phone: phone ? phone : null,
@@ -148,6 +147,7 @@ const login = async (req, res) => {
                     name: 1,
                     email: 1,
                     role: 1,
+                    token: 1,
                     active: 1,
                     permissions: {
                         $cond: {
@@ -184,7 +184,7 @@ const login = async (req, res) => {
 
         await logs.save();
 
-        if (!['admin', 'user', 'superAdmin', 'subAdmin'].includes(userData.role)) {
+        if (![0, 1, 2, 3].includes(userData.role)) {
             return res.status(403).json({
                 success: false,
                 error: "Unauthorized access: invalid role.",
@@ -192,28 +192,28 @@ const login = async (req, res) => {
         }
 
 
-        if (userData.role === 'user' && !userData.is_sub_admin) {
+        if (userData.role === 0 && !userData.is_sub_admin) {
             return res.status(403).json({
                 success: false,
                 error: "Unauthorized access: user does not have subAdmin privileges.",
             });
         }
 
-        if (userData.role === 'admin' && !userData.is_sub_admin) {
+        if (userData.role === 1 && !userData.is_sub_admin) {
             return res.status(403).json({
                 success: false,
                 error: "Unauthorized access: admin does not have subAdmin privileges.",
             });
         }
 
-        if (userData.role === 'superAdmin' && !userData.is_sub_admin) {
+        if (userData.role === 2 && !userData.is_sub_admin) {
             return res.status(403).json({
                 success: false,
                 error: "Unauthorized access: superAdmin does not have subAdmin privileges.",
             });
         }
 
-        if (userData.role === 'user' || userData.role === 'admin' || userData.role === 'superAdmin') {
+        if (userData.role === 0 || userData.role === 1 || userData.role === 2) {
             const users = await User.findByIdAndUpdate(
                 { _id: userData._id },
                 { token: accessToken },
@@ -221,11 +221,11 @@ const login = async (req, res) => {
             )
 
             let message = "Login successfully";
-            if (userData.role === "user") {
+            if (userData.role === 0) {
                 message = "User login successfully";
-            } else if (userData.role === "admin") {
+            } else if (userData.role === 1) {
                 message = "Admin login successfully";
-            } else if (userData.role === "superAdmin") {
+            } else if (userData.role === 2) {
                 message = "superAdmin login successfully";
             }
 
@@ -235,7 +235,6 @@ const login = async (req, res) => {
             res.status(200).json({
                 success: true,
                 message: message,
-                role: userData.role,
                 data: result[0],
                 accessToken: accessToken,
             });
