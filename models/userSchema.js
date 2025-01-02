@@ -25,12 +25,12 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-
+  
     role: {
-        type: String,
+        type: Number,
         required: true,
-        enum: ['admin', 'user', 'superAdmin', 'subAdmin'],
-        default: null
+        enum: [0, 1, 2, 3],   // user = 0, admin = 1, superAdmin = 2, subAdmin = 3
+        default: 0
     },
 
     phone: {
