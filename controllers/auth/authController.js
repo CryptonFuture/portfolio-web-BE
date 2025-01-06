@@ -160,6 +160,7 @@ const login = async (req, res) => {
                     _id: 1,
                     name: 1,
                     email: 1,
+                    password: 1,
                     role: 1,
                     token: 1,
                     active: 1,
