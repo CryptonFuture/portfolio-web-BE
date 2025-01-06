@@ -107,6 +107,20 @@ const login = async (req, res) => {
     try {
         const { email, password } = req.body
 
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                error: 'please fill out all fields'
+            })
+        }
+
+        if (!validator.isEmail(email)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid email'
+            })
+        }
+
         const userData = await User.findOne({ email })
 
         if (!userData) {
