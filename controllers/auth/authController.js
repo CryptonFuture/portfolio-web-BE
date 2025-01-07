@@ -266,7 +266,39 @@ const login = async (req, res) => {
     }
 }
 
+const logout = async (req, res) => {
+    try {
+        const { userId } = req.body
+
+        if (!userId) {
+            return res.status(400).json({ message: "User ID is required for logout." });
+        }
+
+        const data = await User.updateOne(
+            { _id: userId },
+            { $set: { token: null } },
+        )
+
+        await UserLogs.updateOne(
+            { user_id: userId },
+            { $set: { token: null, logout_time: new Date() } }
+        );
+
+        if (data.nModified === 0) {
+            return res.status(404).json({ message: "User not found or already logged out." });
+        }
+
+        return res.status(200).json({ message: "Successfully logged out." });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            error: "internal server error"
+        });
+    }
+}
+
 module.exports = {
     register,
-    login
+    login,
+    logout
 }
