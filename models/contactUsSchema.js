@@ -21,6 +21,11 @@ const contactUsSchema = new mongoose.Schema({
         required: true
     },
 
+    is_deleted: {
+        type: Boolean,
+        default: 0
+    }
+
 }, {
     timestamps: true
 })
