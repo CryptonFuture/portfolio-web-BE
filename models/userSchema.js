@@ -37,6 +37,13 @@ const userSchema = new mongoose.Schema({
         default: 0
     },
 
+    roles: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Role'
+        }
+    ],
+
     phone: {
         type: String,
     },
