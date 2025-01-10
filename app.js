@@ -6,6 +6,7 @@ const permissionRoute = require('./routes/permissionRoutes')
 const userRoute = require('./routes/userRoutes')
 const contactUsRoute = require('./routes/contactUsRoutes')
 const profileRoute = require('./routes/profileRoutes')
+const userAdminRoute = require('./routes/userAdminRoute')
 
 const app = express()
 
@@ -18,6 +19,7 @@ app.use('/v1/api/permission', permissionRoute)
 app.use('/v1/api/user', userRoute)
 app.use('/v1/api/contact', contactUsRoute)
 app.use('/v1/api/profile', profileRoute)
+app.use('/v1/api/admin', userAdminRoute)
 
 app.get('/', () => {
     console.log('Service is working');
