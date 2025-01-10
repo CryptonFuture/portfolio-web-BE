@@ -9,5 +9,6 @@ router.delete('/deleteRole/:id', roleController.deleteRole)
 router.put('/updateRole/:id', roleController.updateRole)
 router.get('/countRole', roleController.countRole)
 router.put('/deleteRoles/:id', roleController.deleteRoles)
+router.post('/user/:id/assign_role', roleController.AssignRole)
 
 module.exports = router
