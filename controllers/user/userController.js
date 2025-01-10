@@ -48,6 +48,7 @@ const changePassword = async (req, res) => {
     }
 }
 
+
 const getUser = async () => {
     try {
         const user = await User.find()
