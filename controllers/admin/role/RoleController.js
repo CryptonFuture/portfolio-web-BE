@@ -1,4 +1,5 @@
 const Role = require('../../../models/roleSchema')
+const User = require('../../../models/userSchema')
 
 const createRole = async (req, res) => {
     try {
@@ -201,6 +202,48 @@ const updateRole = async (req, res) => {
     }
 };
 
+const AssignRole = async (req, res) => {
+    try {
+        const { roleId } = req.body
+        const { userId } = req.params
+
+        const user = User.findById(userId)
+
+        if (!user)
+            return res.status(404).json({
+                success: false,
+                error: 'User not found'
+            });
+
+        const role = Role.findById(roleId)
+
+        if (!role)
+            return res.status(404).json({
+                success: false,
+                error: 'Role not found'
+            });
+
+        if (!user.roles.includes(roleId)) {
+            user.roles.push(roleId)
+            await user.save()
+        }
+
+        const updatedUser = await User.findById(userId).populate('roles')
+
+        return res.status(200).json({
+            success: true,
+            data: updatedUser
+        });
+
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            error: "Internal server error",
+        });
+    }
+}
+
 
 module.exports = {
     createRole,
@@ -209,5 +252,6 @@ module.exports = {
     deleteRole,
     deleteRoles,
     countRole,
-    updateRole
+    updateRole,
+    AssignRole
 }
