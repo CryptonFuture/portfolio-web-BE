@@ -7,100 +7,115 @@ const { isValidEmail } = require('../../utils/utils')
 const validator = require('validator')
 const Permission = require("../../models/permissionSchema");
 const UserPermission = require('../../models/userPermissionSchema')
+const upload = require('../../middleware/multerConfig')
 
 const register = async (req, res) => {
-    try {
-        const { firstname, lastname, email, password, confirmPass, phone, address } = req.body
-
-        if (!firstname || !lastname || !email || !password || !confirmPass) {
+    upload.single('profileImage')(req, res, async (err) => {
+        if (err) {
+            console.log(err);
+            
             return res.status(400).json({
                 success: false,
-                error: 'please fill out all fields'
-            })
+                error: err.message,
+            });
         }
+        try {
+            const { firstname, lastname, email, password, confirmPass, phone, address } = req.body
 
-        if (!validator.isEmail(email)) {
-            return res.status(400).json({
-                success: false,
-                error: 'Invalid email'
-            })
-        }
-
-        const isExistUser = await User.findOne({ email })
-
-        if (isExistUser) {
-            return res.status(400).json({
-                success: false,
-                error: 'Email already exists has been taken!'
-            })
-        } else if (password !== confirmPass) {
-            return res.status(400).json({
-                success: false,
-                error: "password does'nt match",
-            })
-        }
-
-        if (password.length < 10 || confirmPass.length < 10) {
-            return res.status(400).json({
-                success: false,
-                error: "Password must be at least 10 characters long",
-            })
-        }
-
-        const hashPassword = await bcrypt.hash(password, 10)
-        const hashConfirmPassword = await bcrypt.hash(confirmPass, 10)
-
-        const user = new User({
-            firstname,
-            lastname,
-            email,
-            password: hashPassword,
-            confirmPass: hashConfirmPassword,
-            phone: phone ? phone : null,
-            address: address ? address : null,
-            created_by: firstname + ' ' + lastname,
-            updated_by: firstname + ' ' + lastname,
-
-        })
-
-        const userData = await user.save()
-
-        const defaultPermissions = await Permission.find({
-            is_default: 1
-        })
-
-        if (defaultPermissions.length > 0) {
-            const permissionArray = []
-            defaultPermissions.forEach((permission) => {
-                permissionArray.push({
-                    permission_name: permission.permission_name,
-                    permission_value: [0, 1, 2, 3]
+            if (!firstname || !lastname || !email || !password || !confirmPass) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'please fill out all fields'
                 })
+            }
+
+            if (!validator.isEmail(email)) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Invalid email'
+                })
+            }
+
+            const isExistUser = await User.findOne({ email })
+
+            if (isExistUser) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Email already exists has been taken!'
+                })
+            } else if (password !== confirmPass) {
+                return res.status(400).json({
+                    success: false,
+                    error: "password does'nt match",
+                })
+            }
+
+            if (password.length < 10 || confirmPass.length < 10) {
+                return res.status(400).json({
+                    success: false,
+                    error: "Password must be at least 10 characters long",
+                })
+            }
+
+            const hashPassword = await bcrypt.hash(password, 10)
+            const hashConfirmPassword = await bcrypt.hash(confirmPass, 10)
+
+            const user = new User({
+                firstname,
+                lastname,
+                email,
+                password: hashPassword,
+                confirmPass: hashConfirmPassword,
+                phone: phone ? phone : null,
+                address: address ? address : null,
+                profileImage: req.file ? req.file.path : null,
+                created_by: firstname + ' ' + lastname,
+                updated_by: firstname + ' ' + lastname,
+
             })
 
-            const userPermission = new UserPermission({
-                user_id: userData._id,
-                permissions: permissionArray
+            console.log(user);
+            
+
+            const userData = await user.save()
+
+            const defaultPermissions = await Permission.find({
+                is_default: 1
             })
 
-            await userPermission.save()
+            if (defaultPermissions.length > 0) {
+                const permissionArray = []
+                defaultPermissions.forEach((permission) => {
+                    permissionArray.push({
+                        permission_name: permission.permission_name,
+                        permission_value: [0, 1, 2, 3]
+                    })
+                })
+
+                const userPermission = new UserPermission({
+                    user_id: userData._id,
+                    permissions: permissionArray
+                })
+
+                await userPermission.save()
+            }
+
+
+
+            return res.status(200).json({
+                success: true,
+                message: "user create successfully",
+                data: userData
+            })
+        } catch (error) {
+            console.log(error);
+
+            return res.status(500).json({
+                success: false,
+                error: "internal server error"
+            });
         }
-
-
-
-        return res.status(200).json({
-            success: true,
-            message: "user create successfully",
-            data: userData
-        })
-    } catch (error) {
-        console.log(error);
-
-        return res.status(500).json({
-            success: false,
-            error: "internal server error"
-        });
-    }
+    })
 }
 
 const login = async (req, res) => {

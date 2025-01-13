@@ -12,7 +12,7 @@ const changePassword = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 error: 'please fill out all fields'
-            })
+            }) 
         }
 
         const hashNewPassword = await bcrypt.hash(newPass, 10)
@@ -49,7 +49,7 @@ const changePassword = async (req, res) => {
 }
 
 
-const getUser = async () => {
+const getUser = async (req, res) => {
     try {
         const user = await User.find()
 
