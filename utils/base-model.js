@@ -136,6 +136,10 @@ class BaseModel {
     async getCount(query = {}) {
         return this.collection.countDocuments(query);
     }
+
+    async deleteAll() {
+        return this.collection.deleteMany({});
+    }
 }
 
 module.exports = BaseModel;
