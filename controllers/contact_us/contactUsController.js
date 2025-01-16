@@ -86,7 +86,22 @@ const AddContactUs = async (req, res) => {
 
 const getContactUs = async (req, res) => {
     try {
-        const contact = await ContactUs.find()
+        const { page = 1, limit = 10, search = "" } = req.query
+
+        const pageNumber = parseInt(page, 10)
+        const limitNumber = parseInt(limit, 10)
+
+        const searchQuery = search
+            ? { $or: [{ name: { $regex: search, $options: "i" } }, { email: { $regex: search, $options: "i" } }] }
+            : {}
+
+        const skip = (pageNumber - 1) * limitNumber
+
+        const contact = await ContactUs.find(searchQuery)
+        .skip(skip)
+        .limit(limitNumber)
+
+        const totalRecords = await ContactUs.countDocuments(searchQuery)
 
         if (!contact.length > 0) {
             return res.status(404).json({
@@ -97,7 +112,13 @@ const getContactUs = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            data: contact
+            data: contact,
+            pagination: {
+                totalRecords,
+                currentPage: pageNumber,
+                totalPages: Math.ceil(totalRecords / limitNumber),
+                limit: limitNumber
+            }
         })
     } catch (error) {
         return res.status(500).json({
@@ -189,7 +210,13 @@ const deleteContact = async (req, res) => {
 
 const countContactUs = async (req, res) => {
     try {
-        const countContact = await ContactUs.countDocuments()
+        const { search = "" } = req.query
+
+        const searchQuery = search
+            ? { $or: [{ name: { $regex: search, $options: "i" } }, { email: { $regex: search, $options: "i" } }] }
+            : {};
+
+        const countContact = await ContactUs.countDocuments(searchQuery)
         return res.status(200).json({
             success: true,
             count: countContact
