@@ -45,7 +45,22 @@ const createRole = async (req, res) => {
 
 const getRole = async () => {
     try {
-        const role = await Role.find()
+        const { page = 1, limit = 10, search = "" } = req.query
+
+        const pageNumber = parseInt(page, 10)
+        const limitNumber = parseInt(limit, 10)
+
+        const searchQuery = search
+            ? { $or: [{ name: { $regex: search, $options: "i" } }, { email: { $regex: search, $options: "i" } }] }
+            : {}
+
+        const skip = (pageNumber - 1) * limitNumber
+
+        const role = await Role.find(searchQuery)
+        .skip(skip)
+        .limit(limitNumber)
+
+        const totalRecords = await Role.countDocuments(searchQuery)
 
         if (!role.length > 0) {
             return res.status(404).json({
@@ -56,7 +71,13 @@ const getRole = async () => {
 
         return res.status(200).json({
             success: true,
-            data: role
+            data: role,
+            pagination: {
+                totalRecords,
+                currentPage: pageNumber,
+                totalPages: Math.ceil(totalRecords / limitNumber),
+                limit: limitNumber
+            }
         })
     } catch (error) {
         return res.status(500).json({
@@ -148,7 +169,13 @@ const deleteRoles = async (req, res) => {
 
 const countRole = async (req, res) => {
     try {
-        const countRole = await Role.countDocuments()
+        const { search = "" } = req.query
+
+        const searchQuery = search
+            ? { $or: [{ name: { $regex: search, $options: "i" } }, { email: { $regex: search, $options: "i" } }] }
+            : {};
+
+        const countRole = await Role.countDocuments(searchQuery)
         return res.status(200).json({
             success: true,
             count: countRole

@@ -51,7 +51,22 @@ const changePassword = async (req, res) => {
 
 const getUser = async (req, res) => {
     try {
-        const user = await User.find()
+        const { page = 1, limit = 10, search = "" } = req.query
+
+        const pageNumber = parseInt(page, 10)
+        const limitNumber = parseInt(limit, 10)
+
+        const searchQuery = search
+            ? { $or: [{ name: { $regex: search, $options: "i" } }, { email: { $regex: search, $options: "i" } }]}
+            : {}
+
+        const skip = (pageNumber - 1) * limitNumber
+
+        const user = await User.find(searchQuery)
+        .skip(skip)
+        .limit(limitNumber)
+
+        const totalRecords = await User.countDocuments(searchQuery)
 
         if (!user.length > 0) {
             return res.status(404).json({
@@ -62,7 +77,13 @@ const getUser = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            data: user
+            data: user,
+            pagination: {
+                totalRecords,
+                currentPage: pageNumber,
+                totalPages: Math.ceil(totalRecords / limitNumber),
+                limit: limitNumber
+            }
         })
     } catch (error) {
         return res.status(500).json({
@@ -130,7 +151,13 @@ const deleteUsers = async (req, res) => {
 
 const countUser = async (req, res) => {
     try {
-        const countUser = await User.countDocuments()
+        const {search = ""} = req.query
+
+        const searchQuery = search
+            ? { $or: [{ name: { $regex: search, $options: "i" } }, { email: { $regex: search, $options: "i" } }] }
+            : {};
+
+        const countUser = await User.countDocuments(searchQuery)
         return res.status(200).json({
             success: true,
             count: countUser
