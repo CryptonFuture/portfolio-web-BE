@@ -156,6 +156,12 @@ const login = async (req, res) => {
 
         const accessToken = await generateAccessToken({ user: userData })
 
+
+        res.cookie('accessToken', accessToken, {
+            httpOnly: true,
+            maxAge: 24 * 60 * 60 * 1000,
+        })
+
         const result = await User.aggregate([
             {
                 $match: { email: userData.email }
