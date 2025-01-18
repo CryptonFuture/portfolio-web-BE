@@ -185,6 +185,7 @@ const login = async (req, res) => {
                     role: 1,
                     token: 1,
                     active: 1,
+                    profileImage: 1,
                     permissions: {
                         $cond: {
                             if: { $isArray: '$permissions' },
