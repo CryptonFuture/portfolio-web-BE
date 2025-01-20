@@ -289,7 +289,7 @@ const login = async (req, res) => {
 
 const logout = async (req, res) => {
     try {
-        const { userId } = req.body
+        const { userId } = req.query
 
         if (!userId) {
             return res.status(400).json({ message: "User ID is required for logout." });
