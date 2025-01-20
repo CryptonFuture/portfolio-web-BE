@@ -13,7 +13,7 @@ const register = async (req, res) => {
     upload.single('profileImage')(req, res, async (err) => {
         if (err) {
             console.log(err);
-            
+
             return res.status(400).json({
                 success: false,
                 error: err.message,
@@ -68,14 +68,11 @@ const register = async (req, res) => {
                 confirmPass: hashConfirmPassword,
                 phone: phone ? phone : null,
                 address: address ? address : null,
-                profileImage: req.file ? req.file.path : null,
+                profileImage: req.file ? `${req.file.filename}` : null,
                 created_by: firstname + ' ' + lastname,
                 updated_by: firstname + ' ' + lastname,
 
             })
-
-            console.log(user);
-            
 
             const userData = await user.save()
 
@@ -181,6 +178,8 @@ const login = async (req, res) => {
                     _id: 1,
                     name: 1,
                     email: 1,
+                    firstname: 1,
+                    lastname: 1,
                     password: 1,
                     role: 1,
                     token: 1,
