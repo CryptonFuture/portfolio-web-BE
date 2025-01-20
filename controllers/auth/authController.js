@@ -309,7 +309,21 @@ const logout = async (req, res) => {
             return res.status(404).json({ message: "User not found or already logged out." });
         }
 
-        return res.status(200).json({ message: "Successfully logged out." });
+        req.session.destroy((err) => {
+            if (err) {
+                return res.status(500).json({
+                    success: false,
+                    error: 'Failed to destroy session',
+                });
+            }
+
+            res.clearCookie('accessToken');
+
+            return res.status(200).json({
+                success: true,
+                message: 'Logout successful',
+            });
+        });
     } catch (error) {
         return res.status(500).json({
             success: false,
