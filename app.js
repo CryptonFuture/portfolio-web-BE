@@ -14,6 +14,7 @@ const app = express()
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true, limit: '5mb' }))
 app.use(cors())
+app.use('/uploads', express.static('uploads'));
 
 app.use('/v1/api/auth', authRoute)
 app.use('/v1/api/permission', permissionRoute)
