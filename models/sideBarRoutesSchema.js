@@ -9,7 +9,7 @@ const sideBarRoutesSchema = new mongoose.Schema({
 
     role:
     {
-        type: [Number],
+        type: Number,
         required: true,
         enum: [0, 1, 2, 3],   // user = 0, admin = 1, superAdmin = 2, subAdmin = 3
         default: 0
