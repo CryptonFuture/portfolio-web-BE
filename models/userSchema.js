@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema({
     userId: {
         type: String
     },
-  
+
     role: {
         type: Number,
         required: true,

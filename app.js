@@ -8,6 +8,7 @@ const contactUsRoute = require('./routes/contactUsRoutes')
 const profileRoute = require('./routes/profileRoutes')
 const userAdminRoute = require('./routes/userAdminRoute')
 const roleRoute = require('./routes/roleRoutes')
+const sidebarRoute = require('./routes/sidebarRoutes')
 
 const app = express()
 
@@ -23,6 +24,7 @@ app.use('/v1/api/contact', contactUsRoute)
 app.use('/v1/api/profile', profileRoute)
 app.use('/v1/api/admin', userAdminRoute)
 app.use('/v1/api/role', roleRoute)
+app.use('/v1/api/siderBarRoutes', sidebarRoute)
 
 app.get('/', () => {
     console.log('Service is working');
