@@ -3,7 +3,7 @@ const SideBarRoutes = require('../../models/sideBarRoutesSchema')
 const getSidebarRoutes = async (req, res) => {
     try {
 
-        const { role } = req.body
+        const { role } = req.query
 
         const routes = await SideBarRoutes.find({ role })
 
