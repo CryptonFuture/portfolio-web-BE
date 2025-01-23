@@ -249,7 +249,7 @@ const login = async (req, res) => {
             });
         }
 
-        if (userData.role === 0 || userData.role === 1 || userData.role === 2) {
+        if (userData.role === 0 || userData.role === 1 || userData.role === 2 || userData.role === 3) {
             const users = await User.findByIdAndUpdate(
                 { _id: userData._id },
                 { token: accessToken },
@@ -263,6 +263,8 @@ const login = async (req, res) => {
                 message = "Admin login successfully";
             } else if (userData.role === 2) {
                 message = "superAdmin login successfully";
+            } else if (userData.role === 3) {
+                message = "subAdmin login successfully";
             }
 
 
@@ -308,7 +310,7 @@ const logout = async (req, res) => {
         if (data.nModified === 0) {
             return res.status(404).json({ message: "User not found or already logged out." });
         }
-        
+
         res.clearCookie('accessToken');
 
         return res.status(200).json({ message: "Successfully logged out." });
