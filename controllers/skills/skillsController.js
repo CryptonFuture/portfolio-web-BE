@@ -43,7 +43,7 @@ const AddSkills = async (req, res) => {
 
 const getSkills = async (req, res) => {
     try {
-        const { page = 1, limit = 10, search = "" } = req.query
+        const { page = 1, limit = 10, search = "", sort = "" } = req.query
 
         const pageNumber = parseInt(page, 10)
         const limitNumber = parseInt(limit, 10)
@@ -52,9 +52,18 @@ const getSkills = async (req, res) => {
             ? { $or: [{ name: { $regex: search, $options: "i" } }] }
             : {}
 
+
+
         const skip = (pageNumber - 1) * limitNumber
 
+        let sortOptions = {};
+        if (sort) {
+            const [field, order] = sort.split(":");
+            sortOptions[field] = order === "desc" ? -1 : 1;
+        }
+
         const skills = await Skills.find(searchQuery)
+            .sort(sortOptions)
             .skip(skip)
             .limit(limitNumber)
 

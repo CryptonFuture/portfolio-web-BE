@@ -86,7 +86,7 @@ const AddContactUs = async (req, res) => {
 
 const getContactUs = async (req, res) => {
     try {
-        const { page = 1, limit = 10, search = "" } = req.query
+        const { page = 1, limit = 10, search = "", sort = "" } = req.query
 
         const pageNumber = parseInt(page, 10)
         const limitNumber = parseInt(limit, 10)
@@ -97,9 +97,16 @@ const getContactUs = async (req, res) => {
 
         const skip = (pageNumber - 1) * limitNumber
 
+        let sortOptions = {};
+        if (sort) {
+            const [field, order] = sort.split(":");
+            sortOptions[field] = order === "desc" ? -1 : 1;
+        }
+
         const contact = await ContactUs.find(searchQuery)
-        .skip(skip)
-        .limit(limitNumber)
+            .sort(sortOptions)
+            .skip(skip)
+            .limit(limitNumber)
 
         const totalRecords = await ContactUs.countDocuments(searchQuery)
 

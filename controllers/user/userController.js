@@ -12,7 +12,7 @@ const changePassword = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 error: 'please fill out all fields'
-            }) 
+            })
         }
 
         const hashNewPassword = await bcrypt.hash(newPass, 10)
@@ -51,20 +51,28 @@ const changePassword = async (req, res) => {
 
 const getUser = async (req, res) => {
     try {
-        const { page = 1, limit = 10, search = "" } = req.query
+        const { page = 1, limit = 10, search = "", sort = "" } = req.query
 
         const pageNumber = parseInt(page, 10)
         const limitNumber = parseInt(limit, 10)
 
         const searchQuery = search
-            ? { $or: [{ name: { $regex: search, $options: "i" } }, { email: { $regex: search, $options: "i" } }]}
+            ? { $or: [{ name: { $regex: search, $options: "i" } }, { email: { $regex: search, $options: "i" } }] }
             : {}
 
         const skip = (pageNumber - 1) * limitNumber
 
+
+        let sortOptions = {};
+        if (sort) {
+            const [field, order] = sort.split(":");
+            sortOptions[field] = order === "desc" ? -1 : 1;
+        }
+
         const user = await User.find(searchQuery)
-        .skip(skip)
-        .limit(limitNumber)
+            .sort(sortOptions)
+            .skip(skip)
+            .limit(limitNumber)
 
         const totalRecords = await User.countDocuments(searchQuery)
 
@@ -126,7 +134,7 @@ const deleteUsers = async (req, res) => {
     try {
         const { id } = req.params
 
-        const user = await User.findByIdAndUpdate({ _id: id }, {is_deleted: 1})
+        const user = await User.findByIdAndUpdate({ _id: id }, { is_deleted: 1 })
 
         if (!user) {
             return res.status(404).json({
@@ -151,7 +159,7 @@ const deleteUsers = async (req, res) => {
 
 const countUser = async (req, res) => {
     try {
-        const {search = ""} = req.query
+        const { search = "" } = req.query
 
         const searchQuery = search
             ? { $or: [{ name: { $regex: search, $options: "i" } }, { email: { $regex: search, $options: "i" } }] }
