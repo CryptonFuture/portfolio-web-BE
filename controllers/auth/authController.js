@@ -249,7 +249,7 @@ const login = async (req, res) => {
             });
         }
 
-        if (userData.role === 0 || userData.role === 1 || userData.role === 2) {
+        if (userData.role === 0 || userData.role === 1 || userData.role === 2 || userData.role === 3) {
             const users = await User.findByIdAndUpdate(
                 { _id: userData._id },
                 { token: accessToken },
