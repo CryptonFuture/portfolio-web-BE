@@ -51,7 +51,7 @@ const getRole = async () => {
         const limitNumber = parseInt(limit, 10)
 
         const searchQuery = search
-            ? { $or: [{ name: { $regex: search, $options: "i" } }, { email: { $regex: search, $options: "i" } }] }
+            ? { $or: [{ name: { $regex: search, $options: "i" } }] }
             : {}
 
         const skip = (pageNumber - 1) * limitNumber
