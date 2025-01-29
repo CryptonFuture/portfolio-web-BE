@@ -1,8 +1,9 @@
 const User = require('../../models/userSchema')
 const UserLogs = require('../../models/userLogsSchema')
+const jwt = require('jsonwebtoken')
 
 const bcrypt = require('bcryptjs')
-const { generateAccessToken } = require('../../utils/utils')
+const { generateAccessToken, generateRefreshToken } = require('../../utils/utils')
 const { isValidEmail } = require('../../utils/utils')
 const validator = require('validator')
 const Permission = require("../../models/permissionSchema");
@@ -152,12 +153,19 @@ const login = async (req, res) => {
         }
 
         const accessToken = await generateAccessToken({ user: userData })
+        const refreshToken = await generateRefreshToken({ user: userData })
 
 
         res.cookie('accessToken', accessToken, {
             httpOnly: true,
             maxAge: 24 * 60 * 60 * 1000,
         })
+
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            maxAge: 24 * 60 * 60 * 1000,
+        })
+
 
         const result = await User.aggregate([
             {
@@ -183,6 +191,7 @@ const login = async (req, res) => {
                     password: 1,
                     role: 1,
                     token: 1,
+                    refreshToken: 1,
                     active: 1,
                     profileImage: 1,
                     permissions: {
@@ -216,6 +225,7 @@ const login = async (req, res) => {
         const logs = new UserLogs({
             user_id: userData._id,
             token: accessToken,
+
         });
 
         await logs.save();
@@ -252,7 +262,7 @@ const login = async (req, res) => {
         if (userData.role === 0 || userData.role === 1 || userData.role === 2 || userData.role === 3) {
             const users = await User.findByIdAndUpdate(
                 { _id: userData._id },
-                { token: accessToken },
+                { token: accessToken, refreshToken: refreshToken },
                 { new: true }
             )
 
@@ -275,6 +285,7 @@ const login = async (req, res) => {
                 message: message,
                 data: result[0],
                 accessToken: accessToken,
+                refreshToken: refreshToken
             });
         }
 
@@ -322,8 +333,47 @@ const logout = async (req, res) => {
     }
 }
 
+const refreshToken = async (req, res) => {
+    try {
+        const { refreshToken } = req.body
+        if (!refreshToken) {
+            return res.status(401).json({
+                success: false,
+                error: "Refresh Token required"
+            })
+        }
+
+        const user = await User.findOne({ refreshToken })
+        if (!user) {
+            return res.status(403).json({
+                success: false,
+                error: "Invalid Refresh Token"
+            })
+        }
+
+        jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET_KEY, (err, decoded) => {
+            if (err) {
+                return res.status(403).json({ message: "Invalid Refresh Token" });
+            }
+        })
+
+        const accessToken = jwt.sign({ user: decodedData.user }, process.env.ACCESS_TOKEN_SECRET_KEY, { expiresIn: "15m" })
+        return res.status(200).json({
+            success: true,
+            accessToken: accessToken
+        })
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            error: "internal server error"
+        });
+    }
+}
+
 module.exports = {
     register,
     login,
-    logout
+    logout,
+    refreshToken
 }

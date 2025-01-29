@@ -57,6 +57,11 @@ const userSchema = new mongoose.Schema({
         default: null
     },
 
+    refreshToken: {
+        type: String,
+        default: null
+    },
+
     profileImage: {
         type: String,
     },
